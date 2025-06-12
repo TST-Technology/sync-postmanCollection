@@ -25,64 +25,73 @@ This generates a `postman_collection.json` file in your project root.
 ### ✅ Step 2: Create syncPostmanCollection.js Script
 In your project root, create a file `syncPostmanCollection.js`:
 
-\`\`\`javascript
+```javascript
 "use strict";
 
 const fs = require("fs");
 const axios = require("axios");
 
-const POSTMAN_API_KEY = "PMAK-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; //Replace with your API Key
-const WORKSPACE_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";   //Replace with your workspace ID
-const COLLECTION_UID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";  //Optional: If updating an existing collection
+// Configuration
+const POSTMAN_API_KEY = "PMAK-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";  // Replace with your API Key
+const WORKSPACE_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";     // Replace with your workspace ID
+const COLLECTION_UID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";   // Optional: If updating existing collection
 
+// Read collection from file
 const collection = JSON.parse(
-  fs.readFileSync("postman_collection.json", "utf8")
+    fs.readFileSync("postman_collection.json", "utf8")
 );
 
+// API request headers
 const headers = {
-  "X-Api-Key": POSTMAN_API_KEY,
-  "Content-Type": "application/json",
+    "X-Api-Key": POSTMAN_API_KEY,
+    "Content-Type": "application/json"
 };
 
+/**
+ * Uploads or updates the Postman collection
+ */
 async function uploadCollection() {
-  try {
-    if (COLLECTION_UID) {
-      await axios.put(
-        \`https://api.getpostman.com/collections/\${COLLECTION_UID}\`,
-        { collection },
-        { headers }
-      );
-      console.log("✅ Collection updated in Postman");
-    } else {
-      await axios.post(
-        "https://api.getpostman.com/collections",
-        { collection, workspace: WORKSPACE_ID },
-        { headers }
-      );
-      console.log("✅ Collection created in Postman");
+    try {
+        if (COLLECTION_UID) {
+            // Update existing collection
+            await axios.put(
+                `https://api.getpostman.com/collections/${COLLECTION_UID}`,
+                { collection },
+                { headers }
+            );
+            console.log("✅ Collection updated in Postman");
+        } else {
+            // Create new collection
+            await axios.post(
+                "https://api.getpostman.com/collections",
+                { collection, workspace: WORKSPACE_ID },
+                { headers }
+            );
+            console.log("✅ Collection created in Postman");
+        }
+    } catch (err) {
+        console.error("❌ Failed to sync with Postman:", err.response?.data || err);
     }
-  } catch (err) {
-    console.error("❌ Failed to sync with Postman:", err.response?.data || err);
-  }
 }
 
+// Execute the upload
 uploadCollection();
-\`\`\`
+```
 
 ### ✅ Step 3: Add Script in package.json
 Add this script to your package.json:
-\`\`\`json
+```json
 {
-  "scripts": {
-    "sync:postman": "node syncPostmanCollection.js"
-  }
+    "scripts": {
+        "sync:postman": "node syncPostmanCollection.js"
+    }
 }
-\`\`\`
+```
 
 Now you can run:
-\`\`\`bash
+```bash
 npm run sync:postman
-\`\`\`
+```
 
 ### ✅ Step 4: Making New Routes with a Simple Agent Command
 Whenever you add or update a route, just tell your agent:
